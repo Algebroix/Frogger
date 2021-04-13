@@ -1,21 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class FrogController : MonoBehaviour
 {
     [SerializeField]
-    private SpriteRenderer background;
+    private float time = 30.0f;
 
     [SerializeField]
-    private float time = 30.0f;
+    private GameOverlayUI gameOverlayUI;
 
     private Transform frogTransform;
     private Rigidbody2D rigidBody2D;
     private Animator animator;
 
-    private static int currentLevel = 0;
+    public static int currentLevel = 0;
     private int levelCount = 3;
     private bool lockMoving;
     private int lives = 3;
@@ -24,6 +23,7 @@ public class FrogController : MonoBehaviour
     private int score = 0;
     private float currentTime;
     private bool dying;
+    private bool levelEnded = false;
 
     private int moveHash;
     private int dieHash;
@@ -57,13 +57,9 @@ public class FrogController : MonoBehaviour
                 levelPoints++;
                 if (levelPoints == 3)
                 {
-                    //Show congrats
-                    //Load next level
-                    //return;
-                    if (currentLevel + 1 < levelCount)
-                    {
-                        LoadLevel(currentLevel + 1);
-                    }
+                    gameOverlayUI.ShowSummary(true);
+                    levelEnded = true;
+                    return;
                 }
 
                 Respawn();
@@ -91,6 +87,7 @@ public class FrogController : MonoBehaviour
         animator.Play(dieHash);
 
         lives--;
+        gameOverlayUI.RemoveLife(lives);
         lockMoving = true;
         rigidBody2D.SetRotation(0.0f);
         rigidBody2D.velocity = Vector2.zero;
@@ -101,9 +98,8 @@ public class FrogController : MonoBehaviour
     {
         if (lives <= 0)
         {
-            Debug.Log("Dead");
-            //Show score and enable restart
-            LoadLevel(0);
+            levelEnded = true;
+            gameOverlayUI.ShowSummary(false);
         }
         else
         {
@@ -116,16 +112,10 @@ public class FrogController : MonoBehaviour
         }
     }
 
-    private void LoadLevel(int level)
-    {
-        currentLevel = level;
-        SceneManager.LoadScene(level);
-    }
-
     private void AddScore(int value)
     {
         score += value;
-        Debug.Log(score);
+        gameOverlayUI.SetScore(score);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -136,6 +126,16 @@ public class FrogController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Application.Quit();
+        }
+
+        if (levelEnded)
+        {
+            return;
+        }
+
         if (currentTime < 0.0f)
         {
             if (!dying)
@@ -145,6 +145,7 @@ public class FrogController : MonoBehaviour
             return;
         }
         currentTime -= Time.deltaTime;
+        gameOverlayUI.SetTime(currentTime / time);
 
         if (lockMoving)
         {
@@ -171,6 +172,8 @@ public class FrogController : MonoBehaviour
 
     private void Awake()
     {
+        Screen.SetResolution(1920, 1080, true);
+
         frogTransform = transform;
         rigidBody2D = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
