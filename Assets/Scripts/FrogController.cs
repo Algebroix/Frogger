@@ -15,33 +15,46 @@ public class FrogController : MonoBehaviour
     private Animator animator;
 
     public static int currentLevel = 0;
-    private int levelCount = 3;
+
     private bool lockMoving;
-    private int lives = 3;
-    private float progress;
-    private int levelPoints = 0;
-    private int score = 0;
-    private float currentTime;
     private bool dying;
     private bool levelEnded = false;
+
+    private int lives = 3;
+    private int levelPoints = 0;
+    private float progress;
+    private int score = 0;
+    private float currentTime;
 
     private int moveHash;
     private int dieHash;
 
+    private Vector2 startingPosition;
+
     private RaycastHit2D[] collisions = new RaycastHit2D[1];
     private ContactFilter2D walkableFilter = new ContactFilter2D();
 
-    private Vector2 startingPosition;
-
+    //Called at the end of move animation as event
     private void EndMove()
+    {
+        lockMoving = false;
+        LaneProgress();
+        ProcessGround();
+    }
+
+    //Adds points for crossing new highest lane.
+    private void LaneProgress()
     {
         if (rigidBody2D.position.y > progress + 0.5f)
         {
             AddScore(10);
             progress = rigidBody2D.position.y;
         }
+    }
 
-        lockMoving = false;
+    //Checks what's under the frog after moving.
+    private void ProcessGround()
+    {
         int hitCount = rigidBody2D.Cast(Vector2.zero, walkableFilter, collisions);
         if (hitCount == 0)
         {
@@ -51,26 +64,30 @@ public class FrogController : MonoBehaviour
         }
         else
         {
-            if (collisions[0].collider.CompareTag("Finish"))
-            {
-                AddScore((int)(1000 * currentTime / time));
-                levelPoints++;
-                if (levelPoints == 3)
-                {
-                    gameOverlayUI.ShowSummary(true);
-                    levelEnded = true;
-                    return;
-                }
-
-                Respawn();
-            }
-
             Rigidbody2D collisionRigidbody = collisions[0].rigidbody;
             if (collisionRigidbody != null)
             {
                 rigidBody2D.velocity = collisionRigidbody.velocity;
             }
+
+            if (collisions[0].collider.CompareTag("Finish"))
+            {
+                FinishReached();
+            }
         }
+    }
+
+    private void FinishReached()
+    {
+        AddScore((int)(1000 * currentTime / time));
+        levelPoints++;
+        if (levelPoints == 3)
+        {
+            WinLevel();
+            return;
+        }
+
+        Respawn();
     }
 
     public void Move(Vector2 direction)
@@ -118,12 +135,20 @@ public class FrogController : MonoBehaviour
         gameOverlayUI.SetScore(score);
     }
 
+    public void WinLevel()
+    {
+        gameOverlayUI.ShowSummary(true);
+        levelEnded = true;
+    }
+
+    //Since there is only one layer (Obstacle) colliding with Frog nothing needs to be checked.
     private void OnTriggerEnter2D(Collider2D collision)
     {
         Die();
         lockMoving = true;
     }
 
+    //Input only for testing. Should be changed for bigger scale projects, other platforms and other uses.
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -152,7 +177,15 @@ public class FrogController : MonoBehaviour
             return;
         }
 
-        if (Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.UpArrow))
+        {
+            Move(Vector2.up);
+        }
+        else if (Input.GetKey(KeyCode.DownArrow))
+        {
+            Move(Vector2.down);
+        }
+        else if (Input.GetKey(KeyCode.RightArrow))
         {
             Move(Vector2.right);
         }
@@ -160,13 +193,14 @@ public class FrogController : MonoBehaviour
         {
             Move(Vector2.left);
         }
-        else if (Input.GetKey(KeyCode.UpArrow))
+    }
+
+    //Get reference in editor to avoid using FindObjectOfType in game.
+    private void OnValidate()
+    {
+        if (gameOverlayUI == null)
         {
-            Move(Vector2.up);
-        }
-        else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            Move(Vector2.down);
+            gameOverlayUI = FindObjectOfType<GameOverlayUI>();
         }
     }
 

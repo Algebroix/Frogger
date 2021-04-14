@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 972211451998660861}
   - component: {fileID: 972211451998660849}
   - component: {fileID: 972211451998660854}
+  - component: {fileID: 373169591528201332}
   m_Layer: 7
   m_Name: Frog
   m_TagString: Untagged
@@ -120,10 +121,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4fae48e6b107cb84d8ad7042c5143ef7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  background: {fileID: 0}
   time: 30
-  scoreUI: {fileID: 0}
-  timeUI: {fileID: 0}
+  gameOverlayUI: {fileID: 0}
 --- !u!95 &972211451998660849
 Animator:
   serializedVersion: 3
@@ -169,3 +168,16 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
+--- !u!114 &373169591528201332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 972211451998660860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccb3b6e44dce91541bb7a30442e01d78, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  nextLevel: ascend
